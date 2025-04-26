@@ -58,7 +58,8 @@ class Server():
                     # --- nuevo comando lista ---
                     if message.lower() == 'lista':
                         with self.lock:
-                            ports = ', '.join(str(p) for p in self.clients.keys())
+                        ports = '\\n'.join(f"{ip}:{p}"
+                            for p, (_, ip, _) in self.clients.items())
                         client.send(ports.encode())
                         continue
 
