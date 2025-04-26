@@ -1,7 +1,3 @@
-""" Implements a multithreaded server that echos messages received from
-connected clients. 
-"""
-
 import socket
 import threading
 import sys
@@ -9,16 +5,9 @@ import os
 
 
 class Server():
-    """ Implements the Server class.
-    """
+
     def __init__(self, ip, port):
-        """ Constructor method. Takes two arguments: ip address and port.
-        The ip address is a string in the form of an IPv4 address. 
-        (Example: "127.0.0.1") The port is an integer representing an 
-         operating system port on which the server application listens for
-         incomming connections. (Example: 5500) The port used must not already be
-         used by another application.
-        """
+
         self.ip = ip
         self.port = port
         self._listen(ip, port)
@@ -26,9 +15,7 @@ class Server():
 
     # Listen for incoming connections
     def _listen(self, ip, port):
-        """ Creates a server socket and starts listening on assigned 
-        IP Address and Port.
-        """
+
         try:
             self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if os.name == 'nt':
@@ -45,9 +32,7 @@ class Server():
 
     # Accept incoming connection
     def _accept_connection(self):
-        """ Accepts incoming client connections and hands off request processing
-        to new thread.
-        """
+
         try:
             with self.server:
                 while True:
@@ -61,22 +46,36 @@ class Server():
 
     # Process connection in separate thread
     def _process_client_requests(self, client, server):
-        """ Processes communication between client and server. 
-        """
+
         try:
             with client:
                 while True:
                     request = client.recv(1024)
                     if not request:
                         break
-                    message = request.decode('utf-8')
-                    print(f'Message from client: {message}')
-                    match(message):
-                        case 'shutdown server':
-                            server.close()
+                   message = request.decode('utf-8').strip()
 
-                    response = message
-                    client.send(bytearray(response, 'utf-8'))
+                    # --- nuevo comando lista ---
+                    if message.lower() == 'lista':
+                        with self.lock:
+                            ports = ', '.join(str(p) for p in self.clients.keys())
+                        client.send(ports.encode())
+                        continue
+
+                    # --- routing: <puerto> <texto> ---
+                    try:
+                        dest_port, payload = message.split(' ', 1)
+                        dest_port = int(dest_port)
+                    except ValueError:
+                        client.send(b'ERROR formato\\n')
+                        continue
+
+                    with self.lock:
+                        dest_sock = self.clients.get(dest_port)
+                    if dest_sock:
+                        dest_sock.send(payload.encode())
+                    else:
+                       client.send(b'ERROR puerto no conectado\\n')
 
         except Exception as e:
             print(f'Problem processing client requests: {e}')
