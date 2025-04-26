@@ -46,7 +46,25 @@ class Server():
 
     # Process connection in separate thread
     def _process_client_requests(self, client, server):
+                    # --- who-am-I ---
+                    if message.lower() == 'alias':
+                        _, ip, alias = self.clients[client_port]
+                        client.send(
+                            f"Tu alias: {alias} IP:{ip} Port:{client_port}\\n".encode()
+                        )
+                        continue
 
+                    # --- alias <nombre> ---
+                    if message.lower().startswith('alias '):
+                        nuevo = message.split(' ', 1)[1]
+                        if nuevo in self.alias_map:
+                            client.send(b'ERROR alias en uso\\n'); continue
+                        self.alias_map.pop(self.clients[client_port][2], None)
+                        self.alias_map[nuevo] = client_port
+                        sock, ip, _ = self.clients[client_port]
+                        self.clients[client_port] = (sock, ip, nuevo)
+                        client.send(b'Alias cambiado\\n')
+                        continue
         try:
             with client:
                 while True:
