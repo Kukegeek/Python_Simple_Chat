@@ -8,9 +8,9 @@ Autor: https://github.com/pulpfreepress
 
 Add Save Sockets
 
-Add List Command (list all clients)
+Add Lista Command (list all clients)
 
-Add modifify List Command (format IP:Port)
+Add modifify Lista Command (format IP:Port)
 
 Add Auto Alias clients (ID1, ID2...)
 
