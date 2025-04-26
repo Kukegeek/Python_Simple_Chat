@@ -1,59 +1,27 @@
-""" Implements Client application. When launched, client application
-will attempt to connect to server. User can send messages to server and
-server will send messages back to the client. 
-"""
-import socket
+import socket                     # Biblioteca de sockets TCP
 
-class Client():
-    """ Implements the Client class for the simple echo server example.
-    """
-    def __init__(self, ip, port):
-        """ Constructor method takes two arguments: ip address to connect to
-        and port. Server must be running and listening on ip address and port
-        before client can connect.
-        """
-        self.ip = ip
-        self.port = port
-        self._connect(ip, port)
+class Client:                     # Implementa un cliente simple de consola
 
-    # Connect to server
-    def _connect(self, ip, port):
-        """ Creates a socket object and connects to the server on ip address and port. """
+    # Constructor: establece la conexión con el servidor
+    def __init__(self, ip: str, port: int):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)   # Crea socket TCP
+        self.sock.connect((ip, port))                                   # Conecta al servidor
+        print(f"Conectado a {ip}:{port}")                               # Mensaje de confirmación
+
+    # Envía una línea al servidor y espera posible respuesta
+    def send(self, line: str):
+        self.sock.send(line.encode())   # Convierte la línea a bytes UTF‑8 y la envía
+        self._recv()                    # Llama a recepción inmediata (bloqueante corta)
+
+    # Recibe datos pendientes del servidor (si los hay) y los muestra
+    def _recv(self):
         try:
-            print(f'Connecting to server at IP Address: {ip} and Port: {port}')
-            self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.client.connect((ip, port))
-            print(f'Connected to IP Address: {ip} and Port: {port}')
-        except Exception as e:
-            print(f'Problem connecting to the server: {e}')
+            data = self.sock.recv(4096) # Lee hasta 4 KiB (bloquea hasta que hay datos o se cierra)
+            if data:
+                print(data.decode())    # Muestra la respuesta en consola
+        except:                        # Captura cualquier excepción de recv()
+            pass                       # Ignora (podría no haber datos disponibles)
 
-    # Send something to the server
-    def send(self, message_string):
-        """ Sends message to server and processes server response. 
-        This defines the custom protocol between client and server. 
-        Client sends a message and expects a response from the server.
-        """
-        try:
-            self.client.send(bytearray(message_string, 'utf-8'))
-            self._process_server_response()
-        except Exception as e:
-            print(f'Problem sending message to server: {e}')
-
-    # Process server response
-    def _process_server_response(self):
-        """ Processes server response. Decodes raw data sent from the server."""
-        try:
-            response = self.client.recv(1024)
-            message = response.decode('utf-8')
-            print(f'Server response: {message}')
-        except Exception as e:
-            print(f'Problem processing server response: {e}')
-
-    # Close connection
+    # Cierra el socket de forma ordenada
     def close(self):
-        """ Closes the client connection.
-        """
-        try:
-            self.client.close()
-        except Exception as e:
-            print(f'Problem closing client connection: {e}')
+        self.sock.close()               # Cierra la conexión TCP
