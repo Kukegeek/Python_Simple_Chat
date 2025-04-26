@@ -4,7 +4,9 @@ def main():
     c1 = Client("127.0.0.1", 5500)
     message = ""
     while True:
-        line = input("Destino (puerto) | lista | quit: ")
+        line = input("> ").strip()
+        if not line:
+            continue
         if line == 'quit':
             break
         if line == 'lista':
