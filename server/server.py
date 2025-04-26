@@ -46,6 +46,16 @@ class Server():
 
     # Process connection in separate thread
     def _process_client_requests(self, client, server):
+                    # --- broadcast ---
+                    if message.startswith('/all '):
+                        payload = message[5:]
+                        for p, (s, _, _) in self.clients.items():
+                            if p != client_port:
+                                s.send(
+                                  f"{self.clients[client_port][2]} (a TODOS) ► {payload}"
+                                  .encode()
+                                )
+                        continue
                     # --- who-am-I ---
                     if message.lower() == 'alias':
                         _, ip, alias = self.clients[client_port]
@@ -92,7 +102,9 @@ class Server():
                     with self.lock:
                         dest_sock = self.clients.get(dest_port)
                     if dest_sock:
-                        dest_sock.send(payload.encode())
+                        dest_sock.send(
+                            f"{self.clients[client_port][2]} ► {payload}".encode()
+                        )
                     else:
                        client.send(b'ERROR puerto no conectado\\n')
 
