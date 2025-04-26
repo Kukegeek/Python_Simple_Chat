@@ -1,12 +1,7 @@
-""" Main entry point for Server application.
-Default values are set to: IP Address 127.0.0.1 (localhost)
-and Port 5500. 
-"""
-from server import Server
+from server import Server            # Importa la clase Server definida arriba
 
-def main():
-    s1 = Server("127.0.0.1", 5500)
+def main():                          # Función principal del servidor
+    Server("10.10.1.1", 2018)        # Instancia el servidor escuchando en 10.10.1.1:2018
 
-
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__":           # Ejecutar solo si el fichero se corre directamente
+    main()                            # Llama a main()
