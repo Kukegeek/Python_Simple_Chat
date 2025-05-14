@@ -21,7 +21,7 @@ class Client():
             self.local_port = self.sock.getsockname()[1]
             print(f'Conectado a {self.FAKE_SERVER_IP}:{self.port}  (mi puerto local {self.local_port})')
         except Exception as e:
-            print(f'Error conexión: {e}')
+            print(f'Error conexion: {e}')
             sys.exit(1)
 
     def send(self, text):
