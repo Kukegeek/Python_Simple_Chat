@@ -1,27 +1,48 @@
-import socket                     # Biblioteca de sockets TCP
+# client.py
+import socket
+import threading
+import sys
 
-class Client:                     # Implementa un cliente simple de consola
+class Client():
 
-    # Constructor: establece la conexión con el servidor
-    def __init__(self, ip: str, port: int):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)   # Crea socket TCP
-        self.sock.connect((ip, port))                                   # Conecta al servidor
-        print(f"Conectado a {ip}:{port}")                               # Mensaje de confirmación
 
-    # Envía una línea al servidor y espera posible respuesta
-    def send(self, line: str):
-        self.sock.send(line.encode())   # Convierte la línea a bytes UTF‑8 y la envía
-        self._recv()                    # Llama a recepción inmediata (bloqueante corta)
+    FAKE_SERVER_IP = "10.10.1.1"
 
-    # Recibe datos pendientes del servidor (si los hay) y los muestra
-    def _recv(self):
+    def __init__(self, ip, port):
+        self.ip = ip
+        self.port = port
+        self._connect()
+        threading.Thread(target=self._receive_messages, daemon=True).start()
+
+    def _connect(self):
         try:
-            data = self.sock.recv(4096) # Lee hasta 4 KiB (bloquea hasta que hay datos o se cierra)
-            if data:
-                print(data.decode())    # Muestra la respuesta en consola
-        except:                        # Captura cualquier excepción de recv()
-            pass                       # Ignora (podría no haber datos disponibles)
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.connect((self.ip, self.port))
+            self.local_port = self.sock.getsockname()[1]
+            print(f'Conectado a {self.FAKE_SERVER_IP}:{self.port}  (mi puerto local {self.local_port})')
+        except Exception as e:
+            print(f'Error conexión: {e}')
+            sys.exit(1)
 
-    # Cierra el socket de forma ordenada
+    def send(self, text):
+        try:
+            self.sock.send(text.encode('utf-8'))
+        except Exception as e:
+            print(f'Error enviando: {e}')
+
+    def _receive_messages(self):
+        try:
+            while True:
+                data = self.sock.recv(1024)
+                if not data:
+                    print('\n[Desconectado]')
+                    break
+                print(f'\n?? Mensaje: {data.decode("utf-8")}\n>> ', end='', flush=True)
+        except Exception as e:
+            print(f'\nError recepcion: {e}')
+
     def close(self):
-        self.sock.close()               # Cierra la conexión TCP
+        try:
+            self.sock.close()
+        except:
+            pass
